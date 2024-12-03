@@ -1,0 +1,46 @@
+!pip install pyspark kafka-python confluent-kafka
+from confluent_kafka import Producer
+
+# Kafka producer configuration
+producer_conf = {
+    'bootstrap.servers': 'pkc-e0zxq.eu-west-3.aws.confluent.cloud:9092',
+    'security.protocol': 'SASL_SSL',
+    'sasl.mechanisms': 'PLAIN',
+    'sasl.username': 'TM5V7TE42MDDECLS',
+    'sasl.password': 'FS8RfMwVIa4QuQ9lH3u30jPWZ9sbMMrwQGv1ezuXDN8NVB25BaYJqF7uPDbWXe5g',
+    'session.timeout.ms': 45000
+}
+
+producer = Producer(producer_conf)
+
+def delivery_report(err, msg):
+    """ Callback function to report message delivery status """
+    if err is not None:
+        print(f"Message delivery failed: {err}")
+    else:
+        print(f"Message delivered to {msg.topic()} [{msg.partition()
+
+import json
+import time
+import random
+# Fonction pour simuler des données de capteurs
+def simulate_sensor_data(limit=100):  # Limite par défaut à 100 envois
+    wind_directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
+    for i in range(limit):
+        data = {
+            "id":str(random.randint(1000, 9999)),
+            "temperature": round(random.uniform(-10, 40), 2),
+            "humidity": round(random.uniform(20, 100), 2),
+            "air_pressure": round(random.uniform(950, 1050), 2),
+            "wind_speed": round(random.uniform(0, 25), 2),
+            "wind_direction": random.choice(wind_directions),
+            "precipitation": round(random.uniform(0, 50), 2),
+            "timestamp": time.time()
+        }
+        producer.produce("weather_topic",key=data["id"], value=json.dumps(data), callback=delivery_report)
+        print(f"Envoyé ({i+1}/{limit}) : {data}")
+        time.sleep(1)  # Simulation d'une nouvelle mesure chaque seconde
+
+    print("Simulation terminée après l'envoi de", limit, "messages.")
+    producer.flush()
+simulate_sensor_data(limit=50)  # Arrêt après 50 envois
